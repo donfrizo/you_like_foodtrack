@@ -1,184 +1,174 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ЯръКухня — Меню</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
-      background: var(--tg-theme-bg-color, #fff);
-      color: var(--tg-theme-text-color, #000);
-      margin: 0;
-      padding: 12px;
-    }
-
-    .header {
-      position: relative;
-      display: flex;
-      align-items: center;
-      margin-bottom: 14px;
-    }
-
-    .header-text {
-      /* отступ справа под логотип */
-      padding-right: 80px;
-      margin: 0;
-      font-size: 22px;
-      line-height: 1.1;
-    }
-
-    .header-bg-logo {
-      position: absolute;
-      right: 0;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 100px;
-      height: 100px;
-      object-fit: contain;
-      opacity: 0.95;
-      pointer-events: none;
-    }
-
-    h2 { font-size: 17px; margin: 18px 0 8px; }
-
-    .dish {
-      padding: 10px 12px;
-      border: 1px solid var(--tg-theme-hint-color, #ccc);
-      border-radius: 10px;
-      margin-bottom: 6px;
-      cursor: pointer;
-    }
-
-    .dish.selected {
-      background: var(--tg-theme-button-color, #2481cc);
-      color: var(--tg-theme-button-text-color, #fff);
-      border-color: transparent;
-    }
-
-    #signoff {
-      margin-top: 20px;
-      text-align: center;
-      font-weight: bold;
-      white-space: pre-line;
-    }
-
-    #send-btn {
-      margin-top: 16px;
-      width: 100%;
-      padding: 14px;
-      background: var(--tg-theme-button-color, #2481cc);
-      color: var(--tg-theme-button-text-color, #fff);
-      border: none;
-      border-radius: 12px;
-      font-size: 17px;
-      cursor: pointer;
-    }
-
-    #send-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    #count { margin-top: 8px; font-size: 14px; opacity: 0.7; }
-
-    .loading {
-      text-align: center;
-      color: #888;
-      margin-top: 24px;
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Меню столовой</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+body {
+font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+background: var(--tg-theme-bg-color, #fff);
+color: var(--tg-theme-text-color, #000);
+margin: 0;
+padding: 12px;
+}
+.header {
+position: relative;
+margin-bottom: 6px;
+min-height: 100px;
+}
+.header .logo {
+position: absolute;
+right: 0;
+top: 50%;
+transform: translateY(-50%);
+width: 100px;
+height: 100px;
+object-fit: contain;
+opacity: 0.5;
+pointer-events: none;
+z-index: 0;
+}
+h1 {
+position: relative;
+margin-top: 0;
+font-size: 22px;
+padding-right: 110px;
+z-index: 1;
+}
+h2 { font-size: 17px; margin: 18px 0 8px; }
+.dish {
+padding: 10px 12px;
+border: 1px solid var(--tg-theme-hint-color, #ccc);
+border-radius: 10px;
+margin-bottom: 6px;
+cursor: pointer;
+}
+.dish.selected {
+background: var(--tg-theme-button-color, #2481cc);
+color: var(--tg-theme-button-text-color, #fff);
+border-color: transparent;
+}
+#signoff {
+margin-top: 20px;
+text-align: center;
+font-weight: bold;
+white-space: pre-line;
+}
+#send-btn {
+margin-top: 16px;
+width: 100%;
+padding: 14px;
+background: var(--tg-theme-button-color, #2481cc);
+color: var(--tg-theme-button-text-color, #fff);
+border: none;
+border-radius: 12px;
+font-size: 17px;
+cursor: pointer;
+}
+#send-btn:disabled {
+opacity: 0.5;
+cursor: not-allowed;
+}
+#count { margin-top: 8px; font-size: 14px; opacity: 0.7; }
+.loading {
+text-align: center;
+color: #888;
+margin-top: 24px;
+}
+</style>
 </head>
 <body>
-  <div class="header">
-    <h1 class="header-text">🍽 Меню столовой</h1>
-    <img class="header-bg-logo"
-         src="https://raw.githubusercontent.com/donfrizo/you_like_foodtrack/refs/heads/main/logo.png"
-         alt="ЯръКухня">
-  </div>
-
-  <div id="menu-container"><p class="loading">Загрузка меню...</p></div>
-  <div id="count"></div>
-  <button id="send-btn" disabled>📤 Отправить заказ</button>
-  <div id="signoff">ПРИЯТНОГО АППЕТИТА!!!
+<div class="header">
+  <img class="logo"
+       src="https://raw.githubusercontent.com/donfrizo/you_like_foodtrack/refs/heads/main/logo.png"
+       alt="ЯръКухня">
+  <h1>🍽 Меню столовой</h1>
+</div>
+<div id="menu-container"><p class="loading">Загрузка меню...</p></div>
+<div id="count"></div>
+<button id="send-btn" disabled>📤 Отправить заказ</button>
+<div id="signoff">ПРИЯТНОГО АППЕТИТА!!!
 С Любовью ВАША ЯРъКУХНЯ !!!</div>
 
-  <script>
-    const tg = window.Telegram.WebApp;
-    tg.ready();
-    tg.expand();
+<script>
+const tg = window.Telegram.WebApp;
+tg.ready();
+tg.expand();
 
-    const repo = "donfrizo/you_like_foodtrack";
-    const branch = "main";
+const repo = "donfrizo/you_like_foodtrack";
+const branch = "main";
 
-    let menu = ;
-    let mDate = "";
-    let selected = ;
+let menu = []; // наполняется из menu.json
+let mDate = ""; // дата меню
+let selected = []; // id выбранных блюд
 
-    const categoryNames = {
-      first: "🥣 Первые блюда",
-      hot: "🍖 Горячие блюда",
-      garnish: "🍚 Гарниры",
-      salad: "🥗 Салаты",
-    };
-    const categories = ["first", "hot", "garnish", "salad"];
+const categoryNames = {
+first: "🥣 Первые блюда",
+hot: "🍖 Горячие блюда",
+garnish: "🍚 Гарниры",
+salad: "🥗 Салаты",
+};
+const categories = ["first", "hot", "garnish", "salad"];
 
-    async function loadMenu() {
-      try {
-        const resp = await fetch(
-          "https://raw.githubusercontent.com/" + repo + "/" + branch + "/menu.json?ts=" + Date.now()
-        );
-        if (!resp.ok) throw new Error("HTTP " + resp.status);
-        const data = await resp.json();
-        menu = data.dishes || ;
-        mDate = data.m_date || "";
-        document.querySelector(".header-text").textContent =
-          "🍽 Меню" + (mDate ? " на " + mDate : "");
-        render();
-      } catch (e) {
-        document.getElementById("menu-container").innerHTML =
-          '<p class="loading">Не удалось загрузить меню. Закройте приложение и откройте заново.</p>';
-      }
-    }
+async function loadMenu() {
+try {
+const resp = await fetch(
+"https://raw.githubusercontent.com/" + repo + "/" + branch + "/menu.json?ts=" + Date.now()
+);
+if (!resp.ok) throw new Error("HTTP " + resp.status);
+const data = await resp.json();
+menu = data.dishes || [];
+mDate = data.m_date || "";
+document.querySelector("h1").textContent =
+"🍽 Меню" + (mDate ? " на " + mDate : "");
+render();
+} catch (e) {
+document.getElementById("menu-container").innerHTML =
+'<p class="loading">Не удалось загрузить меню. Закройте приложение и откройте заново.</p>';
+}
+}
 
-    function render() {
-      const container = document.getElementById("menu-container");
-      container.innerHTML = "";
-      categories.forEach(cat => {
-        const items = menu.filter(m => m.category === cat);
-        if (!items.length) return;
-        const h2 = document.createElement("h2");
-        h2.textContent = categoryNames[cat];
-        container.appendChild(h2);
-        items.forEach(item => {
-          const el = document.createElement("div");
-          el.className = "dish" + (selected.includes(item.id) ? " selected" : "");
-          el.textContent = item.name;
-          el.onclick = () => toggle(item.id);
-          container.appendChild(el);
-        });
-      });
-      const btn = document.getElementById("send-btn");
-      btn.disabled = selected.length === 0;
-      document.getElementById("count").textContent =
-        selected.length ? "Выбрано: " + selected.length : "";
-    }
+function render() {
+const container = document.getElementById("menu-container");
+container.innerHTML = "";
+categories.forEach(cat => {
+const items = menu.filter(m => m.category === cat);
+if (!items.length) return;
+const h2 = document.createElement("h2");
+h2.textContent = categoryNames[cat];
+container.appendChild(h2);
+items.forEach(item => {
+const el = document.createElement("div");
+el.className = "dish" + (selected.includes(item.id) ? " selected" : "");
+el.textContent = item.name;
+el.onclick = () => toggle(item.id);
+container.appendChild(el);
+});
+});
+const btn = document.getElementById("send-btn");
+btn.disabled = selected.length === 0;
+document.getElementById("count").textContent =
+selected.length ? "Выбрано: " + selected.length : "";
+}
 
-    function toggle(id) {
-      selected = selected.includes(id)
-        ? selected.filter(i => i !== id)
-        : [...selected, id];
-      render();
-    }
+function toggle(id) {
+selected = selected.includes(id)
+? selected.filter(i => i !== id)
+: [...selected, id];
+render();
+}
 
-    document.getElementById("send-btn").addEventListener("click", () => {
-      if (!selected.length) return;
-      const payload = "o_" + selected.join("_");
-      tg.openTelegramLink("https://t.me/QuickInviteBot?start=" + payload);
-    });
+document.getElementById("send-btn").addEventListener("click", () => {
+if (!selected.length) return;
+// Глубокая ссылка: /start с перечнем выбранных блюд.
+// Работает и когда приложение открыто кнопкой в чате, и через меню бота.
+const payload = "o_" + selected.join("_");
+tg.openTelegramLink("https://t.me/QuickInviteBot?start=" + payload);
+});
 
-    loadMenu();
-  </script>
+loadMenu();
+</script>
 </body>
 </html>
