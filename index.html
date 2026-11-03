@@ -13,22 +13,36 @@
       margin: 0;
       padding: 12px;
     }
+
     .header {
+      position: relative;
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-top: 0;
       margin-bottom: 14px;
     }
-    h1 { margin: 0; font-size: 22px; }
-    .logo {
-      height: 100px;      /* размер логотипа — при желании поменяйте */
-      width: auto;
-      object-fit: contain;
-      flex-shrink: 0;
+
+    .header-text {
+      /* отступ справа под логотип */
+      padding-right: 80px;
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.1;
     }
+
+    .header-bg-logo {
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 100px;
+      height: 100px;
+      object-fit: contain;
+      opacity: 0.95;
+      pointer-events: none;
+    }
+
     h2 { font-size: 17px; margin: 18px 0 8px; }
+
     .dish {
       padding: 10px 12px;
       border: 1px solid var(--tg-theme-hint-color, #ccc);
@@ -36,17 +50,20 @@
       margin-bottom: 6px;
       cursor: pointer;
     }
+
     .dish.selected {
       background: var(--tg-theme-button-color, #2481cc);
       color: var(--tg-theme-button-text-color, #fff);
       border-color: transparent;
     }
+
     #signoff {
       margin-top: 20px;
       text-align: center;
       font-weight: bold;
       white-space: pre-line;
     }
+
     #send-btn {
       margin-top: 16px;
       width: 100%;
@@ -58,11 +75,14 @@
       font-size: 17px;
       cursor: pointer;
     }
+
     #send-btn:disabled {
       opacity: 0.5;
       cursor: not-allowed;
     }
+
     #count { margin-top: 8px; font-size: 14px; opacity: 0.7; }
+
     .loading {
       text-align: center;
       color: #888;
@@ -72,11 +92,12 @@
 </head>
 <body>
   <div class="header">
-    <h1>🍽 Меню столовой</h1>
-    <img class="logo"
+    <h1 class="header-text">🍽 Меню столовой</h1>
+    <img class="header-bg-logo"
          src="https://raw.githubusercontent.com/donfrizo/you_like_foodtrack/refs/heads/main/logo.png"
          alt="ЯръКухня">
   </div>
+
   <div id="menu-container"><p class="loading">Загрузка меню...</p></div>
   <div id="count"></div>
   <button id="send-btn" disabled>📤 Отправить заказ</button>
@@ -91,9 +112,9 @@
     const repo = "donfrizo/you_like_foodtrack";
     const branch = "main";
 
-    let menu = [];        // наполняется из menu.json
-    let mDate = "";       // дата меню
-    let selected = [];    // id выбранных блюд
+    let menu = ;
+    let mDate = "";
+    let selected = ;
 
     const categoryNames = {
       first: "🥣 Первые блюда",
@@ -110,9 +131,9 @@
         );
         if (!resp.ok) throw new Error("HTTP " + resp.status);
         const data = await resp.json();
-        menu = data.dishes || [];
+        menu = data.dishes || ;
         mDate = data.m_date || "";
-        document.querySelector("h1").textContent =
+        document.querySelector(".header-text").textContent =
           "🍽 Меню" + (mDate ? " на " + mDate : "");
         render();
       } catch (e) {
