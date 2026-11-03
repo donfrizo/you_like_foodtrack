@@ -4,7 +4,6 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Меню столовой</title>
-  <!-- Подключаем SDK Telegram -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     body {
@@ -12,31 +11,34 @@
       background: var(--tg-theme-bg-color, #fff);
       color: var(--tg-theme-text-color, #000);
       margin: 0;
-      padding: 10px;
+      padding: 12px;
     }
-    h1 { margin-top: 0; }
-    .category { margin: 20px 0; }
+    h1 { margin-top: 0; font-size: 22px; }
+    h2 { font-size: 17px; margin: 18px 0 8px; }
     .dish {
-      padding: 8px 12px;
+      padding: 10px 12px;
       border: 1px solid var(--tg-theme-hint-color, #ccc);
-      border-radius: 8px;
+      border-radius: 10px;
       margin-bottom: 6px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-    }
-    .selected { background: var(--tg-theme-button-color, #2481cc); color: var(--tg-theme-button-text-color, #fff); }
-    button {
-      border: none;
-      background: transparent;
-      color: inherit;
-      font-size: 16px;
+      gap: 8px;
       cursor: pointer;
-      padding: 4px 8px;
     }
-    #total { margin-top: 15px; font-weight: bold; }
-    #send-btn {
+    .dish.selected {
+      background: var(--tg-theme-button-color, #2481cc);
+      color: var(--tg-theme-button-text-color, #fff);
+      border-color: transparent;
+    }
+    #signoff {
       margin-top: 20px;
+      text-align: center;
+      font-weight: bold;
+      white-space: pre-line;
+    }
+    #send-btn {
+      margin-top: 16px;
       width: 100%;
       padding: 14px;
       background: var(--tg-theme-button-color, #2481cc);
@@ -44,90 +46,86 @@
       border: none;
       border-radius: 12px;
       font-size: 17px;
+      cursor: pointer;
     }
+    #count { margin-top: 8px; font-size: 14px; opacity: 0.7; }
   </style>
 </head>
 <body>
   <h1>🍽 Меню столовой</h1>
   <div id="menu-container"></div>
-  <div id="total">Сумма: 0 ₽</div>
-  <button id="send-btn">Отправить заказ</button>
+  <div id="count"></div>
+  <button id="send-btn">📤 Отправить заказ</button>
+  <div id="signoff">ПРИЯТНОГО АППЕТИТА!!!
+С Любовью ВАША ЯРъКУХНЯ !!!</div>
 
   <script>
     const tg = window.Telegram.WebApp;
     tg.ready();
+    tg.expand();
 
-    // Здесь можно подставить меню прямо в код (для теста без бэкенда)
+    // ====== МЕНЮ (обновляется правкой этого списка) ======
     const menu = [
-      { id: 1, category: 'first', name: 'Куриный бульон с лапшой', price: 220 },
-      { id: 2, category: 'first', name: 'Солянка мясная', price: 280 },
-      { id: 3, category: 'hot', name: 'Запечённая куриная грудка', price: 310 },
-      { id: 4, category: 'hot', name: 'Лосось с овощами', price: 420 },
-      { id: 5, category: 'salad', name: 'Салат Цезарь с курицей', price: 250 },
-      { id: 6, category: 'salad', name: 'Тёплый салат со стручковой фасолью', price: 270 },
+      { id: 1, category: "first",   name: "Суп-пюре из тыквы с имбирём и сливками" },
+      { id: 2, category: "first",   name: "Куриный бульон с домашней лапшой и зеленью" },
+      { id: 3, category: "first",   name: "Солянка мясная сборная с лимоном и сметаной" },
+      { id: 4, category: "hot",     name: "Запечённая куриная грудка с пряными травами и чесноком" },
+      { id: 5, category: "hot",     name: "Свинина, тушёная в сливочно-грибном соусе" },
+      { id: 6, category: "hot",     name: "Лосось, запечённый с лимоном, розмарином и овощами" },
+      { id: 7, category: "garnish", name: "Картофельное пюре с маслом и молоком" },
+      { id: 8, category: "garnish", name: "Гречка рассыпчатая с обжаренным луком" },
+      { id: 9, category: "garnish", name: "Рис басмати с зеленью и специями" },
+      { id: 10, category: "salad",  name: "Салат «Цезарь» с курицей, сухариками и пармезаном" },
+      { id: 11, category: "salad",  name: "Овощной салат из свежих томатов, огурцов и сладкого перца" },
+      { id: 12, category: "salad",  name: "Тёплый салат со стручковой фасолью, яйцом и кунжутной заправкой" },
     ];
 
-    const categories = ['first', 'hot', 'salad'];
-    const names = {
-      first: '🥣 Первые блюда',
-      hot: '🍖 Горячие блюда',
-      salad: '🥗 Салаты',
+    const categoryNames = {
+      first: "🥣 Первые блюда",
+      hot: "🍖 Горячие блюда",
+      garnish: "🍚 Гарниры",
+      salad: "🥗 Салаты",
     };
+    const categories = ["first", "hot", "garnish", "salad"];
 
-    let selected = []; // массив id выбранных блюд
+    let selected = [];
 
     function render() {
-      const container = document.getElementById('menu-container');
-      container.innerHTML = '';
+      const container = document.getElementById("menu-container");
+      container.innerHTML = "";
       categories.forEach(cat => {
-        const catItems = menu.filter(m => m.category === cat);
-        if (!catItems.length) return;
-        const catDiv = document.createElement('div');
-        catDiv.className = 'category';
-        catDiv.innerHTML = `<h2>${names[cat]}</h2>`;
-        catItems.forEach(item => {
-          const dishEl = document.createElement('div');
-          dishEl.className = `dish ${selected.includes(item.id) ? 'selected' : ''}`;
-          dishEl.innerHTML = `
-            <span>${item.name} — ${item.price} ₽</span>
-            <button onclick="toggle(${item.id})">${selected.includes(item.id) ? 'Убрать' : 'Выбрать'}</button>
-          `;
-          catDiv.appendChild(dishEl);
+        const items = menu.filter(m => m.category === cat);
+        if (!items.length) return;
+        const h2 = document.createElement("h2");
+        h2.textContent = categoryNames[cat];
+        container.appendChild(h2);
+        items.forEach(item => {
+          const el = document.createElement("div");
+          el.className = "dish" + (selected.includes(item.id) ? " selected" : "");
+          el.textContent = item.name;
+          el.onclick = () => toggle(item.id);
+          container.appendChild(el);
         });
-        container.appendChild(catDiv);
       });
-      updateTotal();
+      document.getElementById("count").textContent =
+        selected.length ? "Выбрано: " + selected.length : "Ничего не выбрано";
     }
 
     function toggle(id) {
-      if (selected.includes(id)) {
-        selected = selected.filter(i => i !== id);
-      } else {
-        selected.push(id);
-      }
+      selected = selected.includes(id)
+        ? selected.filter(i => i !== id)
+        : [...selected, id];
       render();
     }
 
-    function updateTotal() {
-      const total = selected
-        .map(id => menu.find(m => m.id === id).price || 0)
-        .reduce((a, b) => a + b, 0);
-      document.getElementById('total').textContent = `Сумма: ${total} ₽`;
-    }
-
-    document.getElementById('send-btn').addEventListener('click', () => {
+    document.getElementById("send-btn").addEventListener("click", () => {
       if (!selected.length) {
-        alert('Выберите хотя бы одно блюдо');
+        tg.showAlert("Сначала выберите хотя бы одно блюдо!");
         return;
       }
-      const order = {
-        dishes: selected.map(id => menu.find(m => m.id === id)),
-        total: selected
-          .map(id => menu.find(m => m.id === id).price)
-          .reduce((a, b) => a + b, 0),
-      };
-      // Отправляем данные в бот
-      tg.sendData(JSON.stringify(order));
+      // Отправляем боту только id выбранных блюд —
+      // имя и текст заказа бот соберёт у себя в базе
+      tg.sendData(JSON.stringify({ dish_ids: selected }));
     });
 
     render();
