@@ -118,14 +118,17 @@
       render();
     }
 
+    const BOT_USERNAME = "QuickInviteBot"; // юзернейм вашего бота
+
     document.getElementById("send-btn").addEventListener("click", () => {
       if (!selected.length) {
         tg.showAlert("Сначала выберите хотя бы одно блюдо!");
         return;
       }
-      // Отправляем боту только id выбранных блюд —
-      // имя и текст заказа бот соберёт у себя в базе
-      tg.sendData(JSON.stringify({ dish_ids: selected }));
+      // Глубокая ссылка: /start с перечнем выбранных блюд.
+      // Работает и когда приложение открыто кнопкой в чате, и через меню бота.
+      const payload = "o_" + selected.join("_");
+      tg.openTelegramLink("https://t.me/" + BOT_USERNAME + "?start=" + payload);
     });
 
     render();
