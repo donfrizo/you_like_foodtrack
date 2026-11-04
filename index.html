@@ -82,7 +82,7 @@ flex: 1; padding: 10px; border-radius: 10px; border: none; font: inherit; cursor
 </head>
 <body>
 <div class="header">
-<img class="logo" src="https://raw.githubusercontent.com/donfrizo/you_like_foodtrack/refs/heads/main/logo.png" alt="ЯръКухня">
+<img class="logo" src="https://raw.githubusercontent.com/donfrizo/you_like_foodtrack/refs/heads/main/logo.png" alt="ЯрьКухня">
 <h1 id="title">🍽 Меню</h1>
 <div id="group-name"></div>
 </div>
@@ -233,22 +233,17 @@ return;
 
 // открыто по ссылке из группы — заказ идёт глубокой ссылкой.
 // Лимит Telegram на параметр start — 64 символа, его нельзя обойти.
-// Короткий комментарий едет в ссылке и попадает в заказ сразу;
+// Короткий комментарий едет в ссылке и уходит вторым сообщением сразу;
 // длинный не блокирует отправку: бот сразу попросит отправить его текстом.
 let payload = "o_" + (menu.code || groupParam) + "_" + selected.slice().sort((a,b)=>a-b).join("_");
-let commentMode = 0; // 0 — нет, 1 — в ссылке, 2 — текстом после заказа
 if (comment) {
 const withComment = payload + "_c" + toHex(comment);
 if (withComment.length <= 64) {
 payload = withComment;
-commentMode = 1;
 } else {
 payload = payload + "_q";
-commentMode = 2;
+alert("Комментарий принят! После отправки заказа бот попросит отправить его одним сообщением — и он уйдёт в группу заказов вторым сообщением.");
 }
-}
-if (commentMode === 2) {
-alert("Комментарий принят! После отправки заказа бот попросит отправить его одним сообщением — и он сразу добавится к заказу.");
 }
 tg.openTelegramLink("https://t.me/" + BOT_USERNAME + "?start=" + payload);
 }
