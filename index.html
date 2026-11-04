@@ -37,13 +37,6 @@ h2 { font-size: 17px; margin: 18px 0 8px; }
   background: transparent; color: inherit; font: inherit;
   resize: vertical; min-height: 60px;
 }
-#send-btn {
-  margin-top: 16px; width: 100%; padding: 14px;
-  background: var(--tg-theme-button-color, #2481cc);
-  color: var(--tg-theme-button-text-color, #fff);
-  border: none; border-radius: 12px; font-size: 17px; cursor: pointer;
-}
-#send-btn:disabled { opacity: .5; cursor: not-allowed; }
 #count { margin-top: 8px; font-size: 14px; opacity: .7; }
 .signoff {
   display: flex; align-items: center; justify-content: center;
@@ -51,6 +44,13 @@ h2 { font-size: 17px; margin: 18px 0 8px; }
 }
 .signoff img { width: 65px; height: 65px; object-fit: contain; }
 .signoff-text { text-align: center; font-weight: bold; white-space: pre-line; font-size: 14px; }
+#send-btn {
+  margin-top: 20px; width: 100%; padding: 14px;
+  background: var(--tg-theme-button-color, #2481cc);
+  color: var(--tg-theme-button-text-color, #fff);
+  border: none; border-radius: 12px; font-size: 17px; cursor: pointer;
+}
+#send-btn:disabled { opacity: .5; cursor: not-allowed; }
 .picker { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
 .picker button {
   padding: 14px; border-radius: 12px; border: 1px solid var(--tg-theme-hint-color, #ccc);
@@ -89,13 +89,13 @@ h2 { font-size: 17px; margin: 18px 0 8px; }
   <div id="menu-container"><p class="loading">Загрузка меню...</p></div>
   <textarea id="comment" placeholder="Комментарий к заказу (необязательно)"></textarea>
   <div id="count"></div>
-  <button id="send-btn" disabled>📤 Отправить заказ</button>
   <div class="signoff">
     <img src="https://raw.githubusercontent.com/donfrizo/you_like_foodtrack/refs/heads/main/logo.png" alt="">
     <div class="signoff-text">ПРИЯТНОГО АППЕТИТА!!!
 С Любовью ВАША ЯРъКУХНЯ !!!</div>
     <img src="https://raw.githubusercontent.com/donfrizo/you_like_foodtrack/refs/heads/main/logo.png" alt="">
   </div>
+  <button id="send-btn" disabled>📤 Отправить заказ</button>
 
   <div id="overlay">
     <div class="dialog">
@@ -117,8 +117,8 @@ const CATS = [["first","🥣 Первые блюда"],["garnish","🍚 Гарн
 let menu = null, selected = [];
 
 const params = new URLSearchParams(location.search);
-const sp = tg.initDataUnsafe && tg.initDataUnsafe.start_param;
-const groupParam = params.get("group") || (sp ? String(sp) : null);
+const openedFromLink = !!(tg.initDataUnsafe && tg.initDataUnsafe.start_param);
+const groupParam = params.get("g") || (openedFromLink ? String(tg.initDataUnsafe.start_param) : null);
 
 function todayStr(){
   const d = new Date();
@@ -217,21 +217,22 @@ document.getElementById("name-ok").onclick = () => {
 function sendOrder(name){
   const items = menu.dishes.filter(d => selected.includes(d.id))
     .map(d => ({id: d.id, name: d.name, category: d.category}));
-  const data = {
-    group_id: menu.group_id, items,
-    name,
-    comment: document.getElementById("comment").value.trim(),
-  };
-  try {
-    tg.sendData(JSON.stringify(data));           // основной путь — заказ уходит боту
+  const data = { group_id: menu.chat_id, items, name,
+                 comment: document.getElementById("comment").value.trim() };
+
+  if (!openedFromLink) {
+    // открыто по кнопке бота — sendData работает, имя и комментарий доедут
+    tg.sendData(JSON.stringify(data));
     return;
-  } catch (e) { /* открыто не по кнопке — fallback */ }
-  const payload = "o_" + menu.group_id + "_" + selected.join("_");
-  if (payload.length <= 64) {
-    tg.openTelegramLink("https://t.me/" + BOT_USERNAME + "?start=" + payload);
-  } else {
-    alert("Откройте приложение по кнопке в группе — так заказ отправится с именем и комментарием.");
   }
+
+  // открыто по ссылке из группы — sendData не работает, уходим через глубокую ссылку
+  const payload = "o_" + menu.code + "_" + selected.join("_");
+  if (payload.length > 64) {
+    alert("Слишком много блюд для заказа по ссылке — уберите пару позиций или напишите боту в личку.");
+    return;
+  }
+  tg.openTelegramLink("https://t.me/" + BOT_USERNAME + "?start=" + payload);
 }
 
 init();
