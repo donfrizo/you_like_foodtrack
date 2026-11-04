@@ -7,73 +7,73 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 body {
-  font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
-  background: var(--tg-theme-bg-color, #fff);
-  color: var(--tg-theme-text-color, #000);
-  margin: 0; padding: 12px;
+font-family: -apple-system, BlinkMacSystemFont, Roboto, Helvetica, Arial, sans-serif;
+background: var(--tg-theme-bg-color, #fff);
+color: var(--tg-theme-text-color, #000);
+margin: 0; padding: 12px;
 }
 .header { position: relative; min-height: 100px; margin-bottom: 4px; }
 .header .logo {
-  position: absolute; right: 0; top: 50%; transform: translateY(-50%);
-  width: 100px; height: 100px; object-fit: contain;
-  opacity: .5; pointer-events: none;
+position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+width: 100px; height: 100px; object-fit: contain;
+opacity: .5; pointer-events: none;
 }
 h1 { margin: 0; font-size: 22px; padding-right: 110px; position: relative; }
 #group-name { font-size: 16px; font-weight: 600; margin: 6px 0 2px; }
 h2 { font-size: 17px; margin: 18px 0 8px; }
 .dish {
-  padding: 10px 12px;
-  border: 1px solid var(--tg-theme-hint-color, #ccc);
-  border-radius: 10px; margin-bottom: 6px; cursor: pointer;
+padding: 10px 12px;
+border: 1px solid var(--tg-theme-hint-color, #ccc);
+border-radius: 10px; margin-bottom: 6px; cursor: pointer;
 }
 .dish.selected {
-  background: var(--tg-theme-button-color, #2481cc);
-  color: var(--tg-theme-button-text-color, #fff);
-  border-color: transparent;
+background: var(--tg-theme-button-color, #2481cc);
+color: var(--tg-theme-button-text-color, #fff);
+border-color: transparent;
 }
 #comment {
-  width: 100%; box-sizing: border-box; margin-top: 12px; padding: 10px;
-  border-radius: 10px; border: 1px solid var(--tg-theme-hint-color, #ccc);
-  background: transparent; color: inherit; font: inherit;
-  resize: vertical; min-height: 60px;
+width: 100%; box-sizing: border-box; margin-top: 12px; padding: 10px;
+border-radius: 10px; border: 1px solid var(--tg-theme-hint-color, #ccc);
+background: transparent; color: inherit; font: inherit;
+resize: vertical; min-height: 60px;
 }
 #count { margin-top: 8px; font-size: 14px; opacity: .7; }
 .signoff {
-  display: flex; align-items: center; justify-content: center;
-  gap: 10px; margin-top: 20px;
+display: flex; align-items: center; justify-content: center;
+gap: 10px; margin-top: 20px;
 }
 .signoff img { width: 65px; height: 65px; object-fit: contain; }
 .signoff-text { text-align: center; font-weight: bold; white-space: pre-line; font-size: 14px; }
 #send-btn {
-  margin-top: 20px; width: 100%; padding: 14px;
-  background: var(--tg-theme-button-color, #2481cc);
-  color: var(--tg-theme-button-text-color, #fff);
-  border: none; border-radius: 12px; font-size: 17px; cursor: pointer;
+margin-top: 20px; width: 100%; padding: 14px;
+background: var(--tg-theme-button-color, #2481cc);
+color: var(--tg-theme-button-text-color, #fff);
+border: none; border-radius: 12px; font-size: 17px; cursor: pointer;
 }
 #send-btn:disabled { opacity: .5; cursor: not-allowed; }
 .picker { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
 .picker button {
-  padding: 14px; border-radius: 12px; border: 1px solid var(--tg-theme-hint-color, #ccc);
-  background: var(--tg-theme-secondary-bg-color, #f0f0f0);
-  color: inherit; font: inherit; cursor: pointer; font-size: 16px;
+padding: 14px; border-radius: 12px; border: 1px solid var(--tg-theme-hint-color, #ccc);
+background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+color: inherit; font: inherit; cursor: pointer; font-size: 16px;
 }
 #overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,.5);
-  display: none; align-items: center; justify-content: center; z-index: 10;
+position: fixed; inset: 0; background: rgba(0,0,0,.5);
+display: none; align-items: center; justify-content: center; z-index: 10;
 }
 #overlay.show { display: flex; }
 .dialog {
-  background: var(--tg-theme-bg-color, #fff); color: inherit;
-  border-radius: 14px; padding: 16px; width: 88%; max-width: 340px;
+background: var(--tg-theme-bg-color, #fff); color: inherit;
+border-radius: 14px; padding: 16px; width: 88%; max-width: 340px;
 }
 .dialog input {
-  width: 100%; box-sizing: border-box; padding: 10px; margin: 10px 0;
-  border-radius: 10px; border: 1px solid var(--tg-theme-hint-color, #ccc);
-  background: transparent; color: inherit; font: inherit;
+width: 100%; box-sizing: border-box; padding: 10px; margin: 10px 0;
+border-radius: 10px; border: 1px solid var(--tg-theme-hint-color, #ccc);
+background: transparent; color: inherit; font: inherit;
 }
 .dialog .row { display: flex; gap: 8px; }
 .dialog button {
-  flex: 1; padding: 10px; border-radius: 10px; border: none; font: inherit; cursor: pointer;
+flex: 1; padding: 10px; border-radius: 10px; border: none; font: inherit; cursor: pointer;
 }
 .dialog .ok { background: var(--tg-theme-button-color, #2481cc); color: var(--tg-theme-button-text-color, #fff); }
 .dialog .no { background: var(--tg-theme-secondary-bg-color, #eee); color: inherit; }
@@ -81,32 +81,32 @@ h2 { font-size: 17px; margin: 18px 0 8px; }
 </style>
 </head>
 <body>
-  <div class="header">
-    <img class="logo" src="https://raw.githubusercontent.com/donfrizo/you_like_foodtrack/refs/heads/main/logo.png" alt="ЯръКухня">
-    <h1 id="title">🍽 Меню</h1>
-    <div id="group-name"></div>
-  </div>
-  <div id="menu-container"><p class="loading">Загрузка меню...</p></div>
-  <textarea id="comment" placeholder="Комментарий к заказу (необязательно)"></textarea>
-  <div id="count"></div>
-  <div class="signoff">
-    <img src="https://raw.githubusercontent.com/donfrizo/you_like_foodtrack/refs/heads/main/logo.png" alt="">
-    <div class="signoff-text">ПРИЯТНОГО АППЕТИТА!!!
+<div class="header">
+<img class="logo" src="https://raw.githubusercontent.com/donfrizo/you_like_foodtrack/refs/heads/main/logo.png" alt="ЯръКухня">
+<h1 id="title">🍽 Меню</h1>
+<div id="group-name"></div>
+</div>
+<div id="menu-container"><p class="loading">Загрузка меню...</p></div>
+<textarea id="comment" placeholder="Комментарий к заказу (необязательно)"></textarea>
+<div id="count"></div>
+<div class="signoff">
+<img src="https://raw.githubusercontent.com/donfrizo/you_like_foodtrack/refs/heads/main/logo.png" alt="">
+<div class="signoff-text">ПРИЯТНОГО АППЕТИТА!!!
 С Любовью ВАША ЯРъКУХНЯ !!!</div>
-    <img src="https://raw.githubusercontent.com/donfrizo/you_like_foodtrack/refs/heads/main/logo.png" alt="">
-  </div>
-  <button id="send-btn" disabled>📤 Отправить заказ</button>
+<img src="https://raw.githubusercontent.com/donfrizo/you_like_foodtrack/refs/heads/main/logo.png" alt="">
+</div>
+<button id="send-btn" disabled>📤 Отправить заказ</button>
 
-  <div id="overlay">
-    <div class="dialog">
-      <b>Как вас записать в заказ?</b>
-      <input id="name-input" placeholder="Ваше имя">
-      <div class="row">
-        <button class="ok" id="name-ok">Отправить</button>
-        <button class="no" id="name-no">Отмена</button>
-      </div>
-    </div>
-  </div>
+<div id="overlay">
+<div class="dialog">
+<b>Как вас записать в заказ?</b>
+<input id="name-input" placeholder="Ваше имя">
+<div class="row">
+<button class="ok" id="name-ok">Отправить</button>
+<button class="no" id="name-no">Отмена</button>
+</div>
+</div>
+</div>
 
 <script>
 const tg = window.Telegram.WebApp; tg.ready(); tg.expand();
@@ -121,118 +121,131 @@ const openedFromLink = !!(tg.initDataUnsafe && tg.initDataUnsafe.start_param);
 const groupParam = params.get("g") || (openedFromLink ? String(tg.initDataUnsafe.start_param) : null);
 
 function todayStr(){
-  const d = new Date();
-  return String(d.getDate()).padStart(2,"0") + "." + String(d.getMonth()+1).padStart(2,"0") + "." + d.getFullYear();
+const d = new Date();
+return String(d.getDate()).padStart(2,"0") + "." + String(d.getMonth()+1).padStart(2,"0") + "." + d.getFullYear();
 }
 function stripYar(n){ return (n||"").replace(/\s*и ЯръКухня\s*$/i, "").trim(); }
 async function fetchJSON(f){
-  const r = await fetch(GH + f + "?ts=" + Date.now());
-  if (!r.ok) throw new Error("HTTP " + r.status);
-  return r.json();
+const r = await fetch(GH + f + "?ts=" + Date.now());
+if (!r.ok) throw new Error("HTTP " + r.status);
+return r.json();
 }
 function profileName(){
-  const u = tg.initDataUnsafe && tg.initDataUnsafe.user;
-  return u ? [u.first_name, u.last_name].filter(Boolean).join(" ") : "";
+const u = tg.initDataUnsafe && tg.initDataUnsafe.user;
+return u ? [u.first_name, u.last_name].filter(Boolean).join(" ") : "";
 }
 // приоритет — имя, которое пользователь сам заполнял ранее
 function currentName(){ return localStorage.getItem("yar_name") || profileName(); }
 
 async function init(){
-  try {
-    const idx = await fetchJSON("menus_index.json");
-    const todayMenus = Object.entries(idx.menus || {}).filter(([g,v]) => v.m_date === todayStr());
-    if (groupParam && todayMenus.some(([g]) => g === groupParam)) return loadMenu(groupParam);
-    renderPicker(todayMenus);
-  } catch (e) {
-    document.getElementById("menu-container").innerHTML =
-      '<p class="loading">Не удалось загрузить меню. Закройте приложение и откройте заново.</p>';
-  }
+try {
+const idx = await fetchJSON("menus_index.json");
+const todayMenus = Object.entries(idx.menus || {}).filter(([g,v]) => v.m_date === todayStr());
+if (groupParam && todayMenus.some(([g]) => g === groupParam)) return loadMenu(groupParam);
+renderPicker(todayMenus);
+} catch (e) {
+document.getElementById("menu-container").innerHTML =
+'<p class="loading">Не удалось загрузить меню. Закройте приложение и откройте заново.</p>';
+}
 }
 
 function renderPicker(list){
-  const c = document.getElementById("menu-container");
-  document.getElementById("title").textContent = "🍽 Выберите группу";
-  c.innerHTML = list.length ? "" : '<p class="loading">Меню еще не готово! 😔</p>';
-  const box = document.createElement("div"); box.className = "picker";
-  list.forEach(([gid, v]) => {
-    const b = document.createElement("button");
-    b.textContent = "🍽 " + stripYar(v.name) + " — меню на " + v.m_date;
-    b.onclick = () => loadMenu(gid);
-    box.appendChild(b);
-  });
-  c.appendChild(box);
+const c = document.getElementById("menu-container");
+document.getElementById("title").textContent = "🍽 Выберите группу";
+c.innerHTML = list.length ? "" : '<p class="loading">Меню еще не готово! 😔</p>';
+const box = document.createElement("div"); box.className = "picker";
+list.forEach(([gid, v]) => {
+const b = document.createElement("button");
+b.textContent = "🍽 " + stripYar(v.name) + " — меню на " + v.m_date;
+b.onclick = () => loadMenu(gid);
+box.appendChild(b);
+});
+c.appendChild(box);
 }
 
 async function loadMenu(gid){
-  try {
-    const data = await fetchJSON("menu_" + gid + ".json");
-    if (data.m_date !== todayStr()) throw new Error();
-    menu = data;
-    selected = [];
-    document.getElementById("title").textContent = "🍽 Меню на " + data.m_date;
-    document.getElementById("group-name").textContent = stripYar(data.group_name);
-    render();
-  } catch (e) {
-    document.getElementById("menu-container").innerHTML = '<p class="loading">Меню еще не готово! 😔</p>';
-  }
+try {
+const data = await fetchJSON("menu_" + gid + ".json");
+if (data.m_date !== todayStr()) throw new Error();
+menu = data;
+selected = [];
+document.getElementById("title").textContent = "🍽 Меню на " + data.m_date;
+document.getElementById("group-name").textContent = stripYar(data.group_name);
+render();
+} catch (e) {
+document.getElementById("menu-container").innerHTML = '<p class="loading">Меню еще не готово! 😔</p>';
+}
 }
 
 function render(){
-  const c = document.getElementById("menu-container");
-  c.innerHTML = "";
-  CATS.forEach(([cat, label]) => {
-    const items = menu.dishes.filter(d => d.category === cat);
-    if (!items.length) return;
-    const h2 = document.createElement("h2"); h2.textContent = label; c.appendChild(h2);
-    items.forEach(item => {
-      const el = document.createElement("div");
-      el.className = "dish" + (selected.includes(item.id) ? " selected" : "");
-      el.textContent = item.name;
-      el.onclick = () => {
-        selected = selected.includes(item.id) ? selected.filter(i => i !== item.id) : [...selected, item.id];
-        render();
-      };
-      c.appendChild(el);
-    });
-  });
-  document.getElementById("send-btn").disabled = selected.length === 0;
-  document.getElementById("count").textContent = selected.length ? "Выбрано: " + selected.length : "";
+const c = document.getElementById("menu-container");
+c.innerHTML = "";
+CATS.forEach(([cat, label]) => {
+const items = menu.dishes.filter(d => d.category === cat);
+if (!items.length) return;
+const h2 = document.createElement("h2"); h2.textContent = label; c.appendChild(h2);
+items.forEach(item => {
+const el = document.createElement("div");
+el.className = "dish" + (selected.includes(item.id) ? " selected" : "");
+el.textContent = item.name;
+el.onclick = () => {
+selected = selected.includes(item.id) ? selected.filter(i => i !== item.id) : [...selected, item.id];
+render();
+};
+c.appendChild(el);
+});
+});
+document.getElementById("send-btn").disabled = selected.length === 0;
+document.getElementById("count").textContent = selected.length ? "Выбрано: " + selected.length : "";
 }
 
 const overlay = document.getElementById("overlay");
 document.getElementById("send-btn").addEventListener("click", () => {
-  if (!selected.length) return;
-  document.getElementById("name-input").value = currentName();
-  overlay.classList.add("show");
+if (!selected.length) return;
+document.getElementById("name-input").value = currentName();
+overlay.classList.add("show");
 });
 document.getElementById("name-no").onclick = () => overlay.classList.remove("show");
 document.getElementById("name-ok").onclick = () => {
-  let name = document.getElementById("name-input").value.trim();
-  if (name && name !== profileName()) localStorage.setItem("yar_name", name); // своё имя — приоритет
-  overlay.classList.remove("show");
-  if (!name) name = profileName() || "Без имени";
-  sendOrder(name);
+let name = document.getElementById("name-input").value.trim();
+if (name && name !== profileName()) localStorage.setItem("yar_name", name);
+overlay.classList.remove("show");
+if (!name) name = profileName() || "Без имени";
+sendOrder(name);
 };
 
+// русский текст -> hex (в глубокую ссылку можно писать только латиницу/цифры/_/-)
+function toHex(str){
+return Array.from(new TextEncoder().encode(str))
+.map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
 function sendOrder(name){
-  const items = menu.dishes.filter(d => selected.includes(d.id))
-    .map(d => ({id: d.id, name: d.name, category: d.category}));
-  const data = { group_id: menu.chat_id, items, name,
-                 comment: document.getElementById("comment").value.trim() };
+const items = menu.dishes.filter(d => selected.includes(d.id))
+.map(d => ({id: d.id, name: d.name, category: d.category}));
+const comment = document.getElementById("comment").value.trim();
 
-  if (!openedFromLink) {
-    // открыто по кнопке бота — sendData работает, имя и комментарий доедут
-    tg.sendData(JSON.stringify(data));
-    return;
-  }
+if (!openedFromLink) {
+// открыто по кнопке бота — sendData работает, имя и комментарий доедут целиком
+tg.sendData(JSON.stringify({group_id: menu.chat_id, items, name, comment}));
+return;
+}
 
-  // открыто по ссылке из группы — sendData не работает, уходим через глубокую ссылку
-  const payload = "o_" + menu.code + "_" + selected.join("_");
-  if (payload.length > 64) {
-    alert("Слишком много блюд для заказа по ссылке — уберите пару позиций или напишите боту в личку.");
-    return;
-  }
-  tg.openTelegramLink("https://t.me/" + BOT_USERNAME + "?start=" + payload);
+// открыто по ссылке из группы — заказ идёт глубокой ссылкой,
+// комментарий упаковываем в неё (лимит Telegram — 64 символа на всю ссылку)
+let payload = "o" + menu.code + "_" + selected.slice().sort((a,b)=>a-b).join("_");
+if (comment) {
+const withComment = payload + "_c" + toHex(comment);
+if (withComment.length > 64) {
+// примерно сколько русских символов ещё помещается
+const budget = Math.floor((64 - payload.length - 2) / 4);
+alert("Комментарий не помещается в заказ — оставьте до ~" + budget +
+" символов или уберите несколько блюд.\n\nДлинный комментарий можно отправить боту обычным сообщением после оформления заказа.");
+return;
+}
+payload = withComment;
+}
+tg.openTelegramLink("https://t.me/" + BOT_USERNAME + "?start=" + payload);
 }
 
 init();
