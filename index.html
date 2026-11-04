@@ -78,7 +78,7 @@ flex: 1; padding: 10px; border-radius: 10px; border: none; font: inherit; cursor
 .dialog .ok { background: var(--tg-theme-button-color, #2481cc); color: var(--tg-theme-button-text-color, #fff); }
 .dialog .no { background: var(--tg-theme-secondary-bg-color, #eee); color: inherit; }
 .loading { text-align: center; color: #888; margin-top: 24px; }
-#sending { display: none; text-align: center; margin-top: 14px; font-weight: 600; }
+#sending { display: none; text-align: center; margin-top: 14px; font-weight: 600; white-space: pre-line; }
 #sending.show { display: block; }
 #ver { opacity: .45; font-size: 12px; text-align: center; margin-top: 10px; }
 </style>
@@ -115,7 +115,7 @@ flex: 1; padding: 10px; border-radius: 10px; border: none; font: inherit; cursor
 
 <script>
 const tg = window.Telegram.WebApp; tg.ready(); tg.expand();
-const APP_VERSION = "v7";
+const APP_VERSION = "v9";
 const GH_PAGES = "https://donfrizo.github.io/you_like_foodtrack/";
 const GH_RAW = "https://raw.githubusercontent.com/donfrizo/you_like_foodtrack/main/";
 const BOT_USERNAME = "QuickInviteBot";
@@ -123,7 +123,7 @@ const CATS = [["first","🥣 Первые блюда"],["garnish","🍚 Гарн
 
 // ==== ПРЯМАЯ ОТПРАВКА ЗАКАЗА ====
 // Токен бота, добавленного в группу заказов с правом писать и удалять сообщения.
-// Работает из любого контекста: из группы, из меню бота и из обычного браузера.
+// Комментарий ВСЕГДА уходит вторым сообщением, без ограничения длины.
 const ORDER_TOKEN = "9266533357:AAEL1moHEybgfoMa6akCMl4k3IkUJCzy4G8";
 const ORDER_CHAT_ID = -1003991912095;
 const TOKEN_MISSING = !ORDER_TOKEN || ORDER_TOKEN.indexOf("СЮДА") === 0;
@@ -172,7 +172,7 @@ function currentName(){ return localStorage.getItem("yar_name") || profileName()
 async function init(){
 document.getElementById("ver").textContent = APP_VERSION;
 if (TOKEN_MISSING) {
-showMsg("⚠️ Не задан токен заказного бота — заказы пойдут через бота (кнопка START), комментарии в ссылке ограничены.", true);
+showMsg("⚠️ Не задан токен заказного бота — заказы пойдут через бота (кнопка START), комментарий нужно будет отправить текстом по подсказке бота.", true);
 }
 try {
 const idx = await fetchJSON("menus_index.json");
@@ -282,12 +282,6 @@ if (names.length) parts.push(label + ":\n" + names.map(n => "• " + n).join("\n
 return "Заказ на " + todayStr() + " " + stripYar(menu.group_name) + "\n\n" + name + "\n\n" + parts.join("\n\n");
 }
 
-// русский текст -> hex для запасного пути через глубокую ссылку
-function toHex(str){
-return Array.from(new TextEncoder().encode(str))
-.map(b => b.toString(16).padStart(2, "0")).join("");
-}
-
 async function sendOrder(name){
 if (!menu) { showMsg("Меню не загружено — откройте приложение заново.", true); return; }
 if (sending) return;
@@ -307,9 +301,13 @@ return;
 
 try {
 await deletePreviousOrder();
-const sent = await botApi("sendMessage", {chat_id: ORDER_CHAT_ID, text});
+const sent = await botApi("sendMessage", {
+chat_id: ORDER_CHAT_ID,
+text: buildOrderText(name, items)
+});
 let commentId = null;
 if (comment) {
+// комментарий всегда вторым сообщением — любой длины
 commentId = (await botApi("sendMessage", {
 chat_id: ORDER_CHAT_ID, text: "💬 Комментарий: " + comment
 })).message_id;
@@ -329,7 +327,9 @@ fallbackDeepLink(comment);
 }
 }
 
-// запасной путь: глубокая ссылка на бота с заказом
+// запасной путь: глубокая ссылка на бота с заказом.
+// Комментарий флагом _q: после START бот попросит отправить его текстом,
+// и он уйдёт в группу заказов вторым сообщением.
 function fallbackDeepLink(comment){
 sending = false;
 const code = menu.code || groupParam;
@@ -339,16 +339,17 @@ document.getElementById("send-btn").disabled = selected.length === 0;
 return;
 }
 let payload = "o_" + code + "_" + selected.slice().sort((a,b)=>a-b).join("_");
-if (comment) {
-const withComment = payload + "_c" + toHex(comment);
-if (withComment.length <= 64) payload = withComment;
-}
-safeAlert("Прямая отправка не удалась. Сейчас откроется чат бота — подтвердите заказ кнопкой START.");
+if (comment) payload += "_q";
+safeAlert(comment
+? "Заказ отправляется через бота. После подтверждения (START) бот попросит отправить комментарий одним сообщением — он добавится к заказу вторым сообщением."
+: "Прямая отправка не удалась. Сейчас откроется чат бота — подтвердите заказ кнопкой START.");
 try {
 tg.openTelegramLink("https://t.me/" + BOT_USERNAME + "?start=" + payload);
 } catch (e) {
 showMsg("Откройте чат @" + BOT_USERNAME + " и отправьте: /" + payload, true);
 }
+selected = [];
+render();
 }
 
 init();
