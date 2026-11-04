@@ -231,18 +231,20 @@ tg.sendData(JSON.stringify({group_id: menu.chat_id, items, name, comment}));
 return;
 }
 
-// открыто по ссылке из группы — заказ идёт глубокой ссылкой,
-// комментарий упаковываем в неё (лимит Telegram — 64 символа на всю ссылку)
-let payload = "o_" + menu.code + "_" + selected.slice().sort((a,b)=>a-b).join("_");
+// открыто по ссылке из группы — заказ идёт глубокой ссылкой.
+// Лимит Telegram: параметр start — не больше 64 символов.
+let payload = "o_" + (menu.code || groupParam) + "_" + selected.slice().sort((a,b)=>a-b).join("_");
+let commentDropped = false;
 if (comment) {
 const withComment = payload + "_c" + toHex(comment);
-if (withComment.length > 64) {
-// примерно сколько русских символов ещё помещается (каждый = 4 hex-знака)
-const budget = Math.floor((64 - payload.length - 2) / 4);
-alert("Комментарий не помещается в заказ — оставьте до ~" + budget + " символов или уберите несколько блюд.");
-return;
-}
+if (withComment.length <= 64) {
 payload = withComment;
+} else {
+commentDropped = true;
+}
+}
+if (commentDropped) {
+alert("Комментарий слишком длинный — в ссылку он не поместился.\n\nЗаказ отправлю без него: после отправки напишите комментарий боту обычным сообщением, и он добавится к заказу.");
 }
 tg.openTelegramLink("https://t.me/" + BOT_USERNAME + "?start=" + payload);
 }
