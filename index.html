@@ -117,7 +117,8 @@ const CATS = [["first","🥣 Первые блюда"],["garnish","🍚 Гарн
 let menu = null, selected = [];
 
 const params = new URLSearchParams(location.search);
-const groupParam = params.get("group");
+const sp = tg.initDataUnsafe && tg.initDataUnsafe.start_param;
+const groupParam = params.get("group") || (sp ? String(sp) : null);
 
 function todayStr(){
   const d = new Date();
