@@ -80,6 +80,7 @@ flex: 1; padding: 10px; border-radius: 10px; border: none; font: inherit; cursor
 .loading { text-align: center; color: #888; margin-top: 24px; }
 #sending { display: none; text-align: center; margin-top: 14px; font-weight: 600; }
 #sending.show { display: block; }
+#ver { opacity: .45; font-size: 12px; text-align: center; margin-top: 10px; }
 </style>
 </head>
 <body>
@@ -98,7 +99,8 @@ flex: 1; padding: 10px; border-radius: 10px; border: none; font: inherit; cursor
 <img src="https://raw.githubusercontent.com/donfrizo/you_like_foodtrack/refs/heads/main/logo.png" alt="">
 </div>
 <button id="send-btn" disabled>📤 Отправить заказ</button>
-<div id="sending">⏳ Отправляем заказ...</div>
+<div id="sending"></div>
+<div id="ver"></div>
 
 <div id="overlay">
 <div class="dialog">
@@ -113,15 +115,18 @@ flex: 1; padding: 10px; border-radius: 10px; border: none; font: inherit; cursor
 
 <script>
 const tg = window.Telegram.WebApp; tg.ready(); tg.expand();
-const GH = "https://raw.githubusercontent.com/donfrizo/you_like_foodtrack/main/";
+const APP_VERSION = "v7";
+const GH_PAGES = "https://donfrizo.github.io/you_like_foodtrack/";
+const GH_RAW = "https://raw.githubusercontent.com/donfrizo/you_like_foodtrack/main/";
 const BOT_USERNAME = "QuickInviteBot";
 const CATS = [["first","🥣 Первые блюда"],["garnish","🍚 Гарниры"],["hot","🍖 Горячие блюда"],["salad","🥗 Салаты"]];
 
 // ==== ПРЯМАЯ ОТПРАВКА ЗАКАЗА ====
 // Токен бота, добавленного в группу заказов с правом писать и удалять сообщения.
-// Лимит ссылки в 64 символа обходится: заказ и комментарий уходит прямо из приложения.
+// Работает из любого контекста: из группы, из меню бота и из обычного браузера.
 const ORDER_TOKEN = "9266533357:AAEL1moHEybgfoMa6akCMl4k3IkUJCzy4G8";
 const ORDER_CHAT_ID = -1003991912095;
+const TOKEN_MISSING = !ORDER_TOKEN || ORDER_TOKEN.indexOf("СЮДА") === 0;
 
 let menu = null, selected = [], sending = false;
 
@@ -129,13 +134,31 @@ const params = new URLSearchParams(location.search);
 const openedFromLink = !!(tg.initDataUnsafe && tg.initDataUnsafe.start_param);
 const groupParam = params.get("g") || (openedFromLink ? String(tg.initDataUnsafe.start_param) : null);
 
+// сообщение всегда видно на экране — никаких «молча ничего не произошло»
+function showMsg(text, sticky){
+const el = document.getElementById("sending");
+el.textContent = text;
+el.classList.add("show");
+if (!sticky) setTimeout(() => el.classList.remove("show"), 4000);
+}
+function safeAlert(t){
+try { tg.showAlert(t); } catch (e) { try { alert(t); } catch (e2) {} }
+}
+
 function todayStr(){
 const d = new Date();
 return String(d.getDate()).padStart(2,"0") + "." + String(d.getMonth()+1).padStart(2,"0") + "." + d.getFullYear();
 }
 function stripYar(n){ return (n||"").replace(/\s*и ЯръКухня\s*$/i, "").trim(); }
 async function fetchJSON(f){
-const r = await fetch(GH + f + "?ts=" + Date.now());
+const t = "?ts=" + Date.now();
+// сначала Pages: обновляется через ~1 минуту после пуша, ?ts= пробивает его кэш
+try {
+const r = await fetch(GH_PAGES + f + t);
+if (r.ok) return await r.json();
+} catch (e) {}
+// запасной путь: raw.githubusercontent (кэш CDN до 5 минут)
+const r = await fetch(GH_RAW + f + t);
 if (!r.ok) throw new Error("HTTP " + r.status);
 return r.json();
 }
@@ -147,6 +170,10 @@ return u ? [u.first_name, u.last_name].filter(Boolean).join(" ") : "";
 function currentName(){ return localStorage.getItem("yar_name") || profileName(); }
 
 async function init(){
+document.getElementById("ver").textContent = APP_VERSION;
+if (TOKEN_MISSING) {
+showMsg("⚠️ Не задан токен заказного бота — заказы пойдут через бота (кнопка START), комментарии в ссылке ограничены.", true);
+}
 try {
 const idx = await fetchJSON("menus_index.json");
 const todayMenus = Object.entries(idx.menus || {}).filter(([g,v]) => v.m_date === todayStr());
@@ -204,7 +231,7 @@ render();
 c.appendChild(el);
 });
 });
-document.getElementById("send-btn").disabled = selected.length === 0;
+document.getElementById("send-btn").disabled = selected.length === 0 || sending;
 document.getElementById("count").textContent = selected.length ? "Выбрано: " + selected.length : "";
 }
 
@@ -262,14 +289,21 @@ return Array.from(new TextEncoder().encode(str))
 }
 
 async function sendOrder(name){
+if (!menu) { showMsg("Меню не загружено — откройте приложение заново.", true); return; }
+if (sending) return;
 const items = menu.dishes.filter(d => selected.includes(d.id))
 .map(d => ({id: d.id, name: d.name, category: d.category}));
 const comment = document.getElementById("comment").value.trim();
-const text = buildOrderText(name, items);
 
 sending = true;
 document.getElementById("send-btn").disabled = true;
-document.getElementById("sending").classList.add("show");
+showMsg("⏳ Отправляем заказ...", true);
+
+// токен заказного бота не задан — сразу запасной путь, без бесполезного запроса
+if (TOKEN_MISSING) {
+fallbackDeepLink(comment);
+return;
+}
 
 try {
 await deletePreviousOrder();
@@ -285,23 +319,35 @@ try {
 localStorage.setItem(orderKey(), JSON.stringify({order: sent.message_id, comment: commentId}));
 } catch (e) {}
 sending = false;
-document.getElementById("sending").classList.remove("show");
-document.getElementById("comment").value = "";
 selected = [];
 render();
-tg.showAlert("Заказ принят! ✅ Приятного аппетита!");
+showMsg("Заказ принят! ✅ Приятного аппетита!");
+safeAlert("Заказ принят! ✅ Приятного аппетита!");
 } catch (e) {
-// запасной путь: старая схема через глубокую ссылку (комментарий там ограничен)
+showMsg("Прямая отправка не удалась: " + e.message, true);
+fallbackDeepLink(comment);
+}
+}
+
+// запасной путь: глубокая ссылка на бота с заказом
+function fallbackDeepLink(comment){
 sending = false;
-document.getElementById("sending").classList.remove("show");
+const code = menu.code || groupParam;
+if (!code) {
+showMsg("Не удалось определить группу меню. Откройте приложение заново и выберите группу в списке.", true);
 document.getElementById("send-btn").disabled = selected.length === 0;
-let payload = "o_" + (menu.code || groupParam) + "_" + selected.slice().sort((a,b)=>a-b).join("_");
+return;
+}
+let payload = "o_" + code + "_" + selected.slice().sort((a,b)=>a-b).join("_");
 if (comment) {
 const withComment = payload + "_c" + toHex(comment);
 if (withComment.length <= 64) payload = withComment;
 }
+safeAlert("Прямая отправка не удалась. Сейчас откроется чат бота — подтвердите заказ кнопкой START.");
+try {
 tg.openTelegramLink("https://t.me/" + BOT_USERNAME + "?start=" + payload);
-tg.showAlert("Прямая отправка не удалась (" + e.message + "). Открываю запасной способ — подтвердите заказ кнопкой START у бота.");
+} catch (e) {
+showMsg("Откройте чат @" + BOT_USERNAME + " и отправьте: /" + payload, true);
 }
 }
 
