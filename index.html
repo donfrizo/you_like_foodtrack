@@ -233,14 +233,13 @@ return;
 
 // открыто по ссылке из группы — заказ идёт глубокой ссылкой,
 // комментарий упаковываем в неё (лимит Telegram — 64 символа на всю ссылку)
-let payload = "o" + menu.code + "_" + selected.slice().sort((a,b)=>a-b).join("_");
+let payload = "o_" + menu.code + "_" + selected.slice().sort((a,b)=>a-b).join("_");
 if (comment) {
 const withComment = payload + "_c" + toHex(comment);
 if (withComment.length > 64) {
-// примерно сколько русских символов ещё помещается
+// примерно сколько русских символов ещё помещается (каждый = 4 hex-знака)
 const budget = Math.floor((64 - payload.length - 2) / 4);
-alert("Комментарий не помещается в заказ — оставьте до ~" + budget +
-" символов или уберите несколько блюд.\n\nДлинный комментарий можно отправить боту обычным сообщением после оформления заказа.");
+alert("Комментарий не помещается в заказ — оставьте до ~" + budget + " символов или уберите несколько блюд.");
 return;
 }
 payload = withComment;
