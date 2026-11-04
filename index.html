@@ -78,11 +78,13 @@ flex: 1; padding: 10px; border-radius: 10px; border: none; font: inherit; cursor
 .dialog .ok { background: var(--tg-theme-button-color, #2481cc); color: var(--tg-theme-button-text-color, #fff); }
 .dialog .no { background: var(--tg-theme-secondary-bg-color, #eee); color: inherit; }
 .loading { text-align: center; color: #888; margin-top: 24px; }
+#sending { display: none; text-align: center; margin-top: 14px; font-weight: 600; }
+#sending.show { display: block; }
 </style>
 </head>
 <body>
 <div class="header">
-<img class="logo" src="https://raw.githubusercontent.com/donfrizo/you_like_foodtrack/refs/heads/main/logo.png" alt="ЯрьКухня">
+<img class="logo" src="https://raw.githubusercontent.com/donfrizo/you_like_foodtrack/refs/heads/main/logo.png" alt="ЯръКухня">
 <h1 id="title">🍽 Меню</h1>
 <div id="group-name"></div>
 </div>
@@ -96,6 +98,7 @@ flex: 1; padding: 10px; border-radius: 10px; border: none; font: inherit; cursor
 <img src="https://raw.githubusercontent.com/donfrizo/you_like_foodtrack/refs/heads/main/logo.png" alt="">
 </div>
 <button id="send-btn" disabled>📤 Отправить заказ</button>
+<div id="sending">⏳ Отправляем заказ...</div>
 
 <div id="overlay">
 <div class="dialog">
@@ -114,7 +117,13 @@ const GH = "https://raw.githubusercontent.com/donfrizo/you_like_foodtrack/main/"
 const BOT_USERNAME = "QuickInviteBot";
 const CATS = [["first","🥣 Первые блюда"],["garnish","🍚 Гарниры"],["hot","🍖 Горячие блюда"],["salad","🥗 Салаты"]];
 
-let menu = null, selected = [];
+// ==== ПРЯМАЯ ОТПРАВКА ЗАКАЗА ====
+// Токен бота, добавленного в группу заказов с правом писать и удалять сообщения.
+// Лимит ссылки в 64 символа обходится: заказ и комментарий уходит прямо из приложения.
+const ORDER_TOKEN = "9266533357:AAEL1moHEybgfoMa6akCMl4k3IkUJCzy4G8";
+const ORDER_CHAT_ID = -5255303848;
+
+let menu = null, selected = [], sending = false;
 
 const params = new URLSearchParams(location.search);
 const openedFromLink = !!(tg.initDataUnsafe && tg.initDataUnsafe.start_param);
@@ -201,7 +210,7 @@ document.getElementById("count").textContent = selected.length ? "Выбрано
 
 const overlay = document.getElementById("overlay");
 document.getElementById("send-btn").addEventListener("click", () => {
-if (!selected.length) return;
+if (!selected.length || sending) return;
 document.getElementById("name-input").value = currentName();
 overlay.classList.add("show");
 });
@@ -214,38 +223,86 @@ if (!name) name = profileName() || "Без имени";
 sendOrder(name);
 };
 
-// русский текст -> hex (в глубокую ссылку можно писать только латиницу/цифры/_/-)
+// ---- вызов Telegram Bot API прямо из приложения ----
+async function botApi(method, params){
+const r = await fetch("https://api.telegram.org/bot" + ORDER_TOKEN + "/" + method, {
+method: "POST",
+headers: { "Content-Type": "application/json" },
+body: JSON.stringify(params)
+});
+const j = await r.json();
+if (!j.ok) throw new Error(j.description || ("HTTP " + r.status));
+return j.result;
+}
+
+// старые сообщения сегодняшнего заказа этого устройства
+function orderKey(){ return "yar_order_" + menu.chat_id + "_" + todayStr(); }
+async function deletePreviousOrder(){
+let prev = null;
+try { prev = JSON.parse(localStorage.getItem(orderKey()) || "null"); } catch (e) {}
+if (!prev) return;
+for (const id of [prev.order, prev.comment]) {
+if (id) await botApi("deleteMessage", {chat_id: ORDER_CHAT_ID, message_id: id}).catch(() => {});
+}
+}
+
+function buildOrderText(name, items){
+const parts = [];
+CATS.forEach(([cat, label]) => {
+const names = items.filter(i => i.category === cat).map(i => i.name);
+if (names.length) parts.push(label + ":\n" + names.map(n => "• " + n).join("\n"));
+});
+return "Заказ на " + todayStr() + " " + stripYar(menu.group_name) + "\n\n" + name + "\n\n" + parts.join("\n\n");
+}
+
+// русский текст -> hex для запасного пути через глубокую ссылку
 function toHex(str){
 return Array.from(new TextEncoder().encode(str))
 .map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
-function sendOrder(name){
+async function sendOrder(name){
 const items = menu.dishes.filter(d => selected.includes(d.id))
 .map(d => ({id: d.id, name: d.name, category: d.category}));
 const comment = document.getElementById("comment").value.trim();
+const text = buildOrderText(name, items);
 
-if (!openedFromLink) {
-// открыто по кнопке бота — sendData работает, комментарий любой длины доедет целиком
-tg.sendData(JSON.stringify({group_id: menu.chat_id, items, name, comment}));
-return;
+sending = true;
+document.getElementById("send-btn").disabled = true;
+document.getElementById("sending").classList.add("show");
+
+try {
+await deletePreviousOrder();
+const sent = await botApi("sendMessage", {chat_id: ORDER_CHAT_ID, text});
+let commentId = null;
+if (comment) {
+commentId = (await botApi("sendMessage", {
+chat_id: ORDER_CHAT_ID, text: "💬 Комментарий: " + comment
+})).message_id;
 }
-
-// открыто по ссылке из группы — заказ идёт глубокой ссылкой.
-// Лимит Telegram на параметр start — 64 символа, его нельзя обойти.
-// Короткий комментарий едет в ссылке и уходит вторым сообщением сразу;
-// длинный не блокирует отправку: бот сразу попросит отправить его текстом.
+// запоминаем id сообщений, чтобы при изменении заказа удалить старые
+try {
+localStorage.setItem(orderKey(), JSON.stringify({order: sent.message_id, comment: commentId}));
+} catch (e) {}
+sending = false;
+document.getElementById("sending").classList.remove("show");
+document.getElementById("comment").value = "";
+selected = [];
+render();
+tg.showAlert("Заказ принят! ✅ Приятного аппетита!");
+} catch (e) {
+// запасной путь: старая схема через глубокую ссылку (комментарий там ограничен)
+sending = false;
+document.getElementById("sending").classList.remove("show");
+document.getElementById("send-btn").disabled = selected.length === 0;
 let payload = "o_" + (menu.code || groupParam) + "_" + selected.slice().sort((a,b)=>a-b).join("_");
 if (comment) {
 const withComment = payload + "_c" + toHex(comment);
-if (withComment.length <= 64) {
-payload = withComment;
-} else {
-payload = payload + "_q";
-alert("Комментарий принят! После отправки заказа бот попросит отправить его одним сообщением — и он уйдёт в группу заказов вторым сообщением.");
-}
+if (withComment.length <= 64) payload = withComment;
 }
 tg.openTelegramLink("https://t.me/" + BOT_USERNAME + "?start=" + payload);
+tg.showAlert("Прямая отправка не удалась (" + e.message + "). Открываю запасной способ — подтвердите заказ кнопкой START у бота.");
+}
 }
 
 init();
